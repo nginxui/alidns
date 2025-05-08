@@ -24,9 +24,11 @@ const addrOfAPI string = "%s://alidns.aliyuncs.com/"
 
 // CredInfo implements param of the crediential
 type CredInfo struct {
-	AccKeyID     string `json:"access_key_id"`
-	AccKeySecret string `json:"access_key_secret"`
-	RegionID     string `json:"region_id,omitempty"`
+	AccKeyID      string `json:"access_key_id"`
+	AccKeySecret  string `json:"access_key_secret"`
+	RegionID      string `json:"region_id,omitempty"`
+	RAMRole       string `json:"ram_role,omitempty"`
+	SecurityToken string `json:"security_token,omitempty"`
 }
 
 // AliClient abstructs the alidns.Client
@@ -44,7 +46,7 @@ type vKey struct {
 	val string
 }
 
-func newCredInfo(pAccKeyID, pAccKeySecret, pRegionID string) *CredInfo {
+func newCredInfo(pAccKeyID, pAccKeySecret, pRegionID, pRAMRole, pSecurityToken string) *CredInfo {
 	if pAccKeyID == "" || pAccKeySecret == "" {
 		return nil
 	}
@@ -52,9 +54,11 @@ func newCredInfo(pAccKeyID, pAccKeySecret, pRegionID string) *CredInfo {
 		pRegionID = defRegID
 	}
 	return &CredInfo{
-		AccKeyID:     pAccKeyID,
-		AccKeySecret: pAccKeySecret,
-		RegionID:     pRegionID,
+		AccKeyID:      pAccKeyID,
+		AccKeySecret:  pAccKeySecret,
+		RegionID:      pRegionID,
+		RAMRole:       pRAMRole,
+		SecurityToken: pSecurityToken,
 	}
 }
 
@@ -93,7 +97,6 @@ func (c *aliClient) getAliClientSche(cred *CredInfo, scheme string) (*aliClient,
 	if scheme == "" {
 		scheme = "http"
 	}
-
 	cl0 := &aliClient{
 		APIHost: fmt.Sprintf(addrOfAPI, scheme),
 		reqMap: []vKey{
@@ -107,6 +110,16 @@ func (c *aliClient) getAliClientSche(cred *CredInfo, scheme string) (*aliClient,
 		},
 		sigStr: "",
 		sigPwd: cred.AccKeySecret,
+	}
+
+	// Add SecurityToken if provided
+	if cred.SecurityToken != "" {
+		cl0.reqMap = append(cl0.reqMap, vKey{key: "SecurityToken", val: cred.SecurityToken})
+	}
+
+	// Add RAMRole if provided
+	if cred.RAMRole != "" {
+		cl0.reqMap = append(cl0.reqMap, vKey{key: "RoleArn", val: cred.RAMRole})
 	}
 
 	return cl0, nil

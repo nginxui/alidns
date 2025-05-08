@@ -18,6 +18,10 @@ type Provider struct {
 	AccKeySecret string `json:"access_key_secret"`
 	// Optional for identifing the region of the Aliyun's Service,The default is zh-hangzhou
 	RegionID string `json:"region_id,omitempty"`
+	// Your instance RAM role (https://www.alibabacloud.com/help/doc-detail/54579.htm)
+	RAMRole string `json:"ram_role,omitempty"`
+	// STS Security Token (optional)
+	SecurityToken string `json:"security_token,omitempty"`
 }
 
 // AppendRecords adds records to the zone. It returns the records that were added.
@@ -103,7 +107,7 @@ func (p *Provider) getClient() error {
 }
 
 func (p *Provider) getClientWithZone(zone string) error {
-	cred := newCredInfo(p.AccKeyID, p.AccKeySecret, p.RegionID)
+	cred := newCredInfo(p.AccKeyID, p.AccKeySecret, p.RegionID, p.RAMRole, p.SecurityToken)
 	return p.client.getAliClient(cred, zone)
 }
 
